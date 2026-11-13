@@ -97,19 +97,31 @@ sudo apt update && sudo apt install earlyoom -y
 sudo systemctl enable --now earlyoom
 ```
 
-#### (Optional) Custom tuning for developer containers:
-Edit `/etc/default/earlyoom`:
-```bash
-sudo nano /etc/default/earlyoom
-```
-Set:
-```text
-EARLYOOM_ARGS="-m 5 -s 10 -r 60 --prefer '^(java|oracle|dockerd)' --avoid '^(systemd|Xorg|lightdm|xfce4.*)'"
-```
-Restart earlyoom:
-```bash
-sudo systemctl restart earlyoom
-```
+#### Desktop Visual Notifications & Custom Tuning:
+By default, `earlyoom` logs to `journalctl`. To make it pop up a visual desktop alert bubble on your screen using `notify-send` when it terminates a runaway process:
+
+1. Install `libnotify-bin`:
+   ```bash
+   sudo apt install libnotify-bin -y
+   ```
+
+2. Configure `/etc/default/earlyoom`:
+   ```bash
+   sudo nano /etc/default/earlyoom
+   ```
+   Set:
+   ```text
+   EARLYOOM_ARGS="-m 5 -s 10 -r 60 -N /usr/bin/notify-send --prefer '^(java|oracle|dockerd)' --avoid '^(systemd|Xorg|lightdm|xfce4.*)'"
+   ```
+   * **`-N /usr/bin/notify-send`**: Sends a GUI notification popup on your Kali desktop.
+   * **`-m 5`**: Triggers when RAM has less than 5% free.
+   * **`--prefer`**: Targets heavy containers/Java first.
+   * **`--avoid`**: Completely protects desktop GUI and systemd from ever being touched.
+
+3. Restart earlyoom to apply:
+   ```bash
+   sudo systemctl restart earlyoom
+   ```
 
 ---
 
