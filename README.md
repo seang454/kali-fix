@@ -59,28 +59,41 @@ flowchart TD
 
 ---
 
-### Layer 1: Expand Swap Buffer to 8 GB (Like Windows Pagefile)
+### Layer 1: Expand Swap Buffer to 8 GB or 16 GB (Like Windows Pagefile)
 
-Creating an 8 GB swap file on your NVMe SSD ensures your system has a large virtual memory cushion ($7.5\text{ GB RAM} + 8\text{ GB Swap} = 15.5\text{ GB}$ total addressable memory).
+Creating an 8 GB or 16 GB swap file on your NVMe SSD ensures your system has a massive virtual memory cushion.
+* With **8 GB Swap:** $7.5\text{ GB RAM} + 8\text{ GB Swap} = 15.5\text{ GB total usable memory}$.
+* With **16 GB Swap (Recommended for Oracle DB):** $7.5\text{ GB RAM} + 16\text{ GB Swap} = 23.5\text{ GB total usable memory}$.
+*(Since the 256 GB NVMe SSD has over 180 GB of free space, dedicating 16 GB takes less than 9% of storage and completely eliminates memory ceilings).*
 
+#### Option A: Create 8 GB Swap
 ```bash
-# 1. Turn off old swap
 sudo swapoff -a
-
-# 2. Allocate an 8 GB file on root
 sudo fallocate -l 8G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo grep -qxF '/swapfile none swap sw 0 0' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
 
-# 3. Restrict permissions (root only)
+#### Option B: Upgrade / Resize Swap to 16 GB (Ideal for Heavy Containers)
+If you already have a swapfile and want to upgrade it to 16 GB:
+```bash
+# 1. Turn off existing swap
+sudo swapoff -v /swapfile
+
+# 2. Resize to 16 GB
+sudo fallocate -l 16G /swapfile
+
+# 3. Secure permissions
 sudo chmod 600 /swapfile
 
-# 4. Format as swap
+# 4. Format and activate
 sudo mkswap /swapfile
-
-# 5. Enable the swap file
 sudo swapon /swapfile
 
-# 6. Make permanent in /etc/fstab (only add if not already present)
-sudo grep -qxF '/swapfile none swap sw 0 0' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+# 5. Verify the new 16 GB size
+free -h
 ```
 
 ---
